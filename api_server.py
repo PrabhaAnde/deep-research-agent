@@ -23,7 +23,7 @@ from financial_research_agent import FinancialResearchAgent
 
 
 # Configuration
-SERPAPI_KEY = os.getenv("SERPAPI_KEY", "89edc0de285fab16d6170e2f5d508b91069acfec757f48061b70d7a2b5bda15e")
+SERPAPI_KEY = os.getenv("SERPAPI_KEY", "xxxxxxx")
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
 MODEL = os.getenv("MODEL", "qwen3:32b")
 
