@@ -309,7 +309,6 @@ docker-compose restart
 - Increase Docker memory limits
 - Use CPU-only mode (remove GPU sections from docker-compose.yaml)
 
-See [DOCKER_QUICKSTART.md](DOCKER_QUICKSTART.md) for more troubleshooting tips.
 
 ## 🤝 Contributing
 
