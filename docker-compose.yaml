@@ -1,0 +1,103 @@
+services:
+  ollama:
+    build:
+      context: .
+      dockerfile: Dockerfile.ollama
+    container_name: ollama
+    restart: unless-stopped
+    ports:
+      - "11434:11434"  # REST API port
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+      - OLLAMA_KEEP_ALIVE=24h
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1  # Use all available GPUs or specify count
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s  # Give time for model pulling on first start
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:cuda  # <- Changed to CUDA image
+    container_name: open-webui
+    restart: unless-stopped
+    ports:
+      - "8080:8080"  # Web UI port
+    volumes:
+      - open_webui_data:/app/backend/data
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - WEBUI_SECRET_KEY=your-secret-key-here
+      - WEBUI_NAME=Ashvam AI Hub
+      - WEBUI_AUTH=False  # Set to True for authentication
+      - ENABLE_TOOLS=true  # <- Added to explicitly enable tools
+      - CUDA_VISIBLE_DEVICES=0  # <- Added CUDA device access
+      - USE_CUDA=true  # <- Added to force CUDA usage for tools
+    depends_on:
+      ollama:
+        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # Added GPU access for Open WebUI
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  research-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: research-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"  # API server port
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+      - SERPAPI_KEY=xxxxxxxxxxx
+    depends_on:
+      ollama:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  research-web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: research-web
+    restart: unless-stopped
+    ports:
+      - "8180:8180"  # Web client port
+    depends_on:
+      - research-api
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8180')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  ollama_data:
+    driver: local
+  open_webui_data:
+    driver: local
+
+networks:
+  default:
+    name: ollama-network

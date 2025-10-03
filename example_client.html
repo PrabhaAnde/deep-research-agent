@@ -1,0 +1,1983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deep Research API Client</title>
+    <script data-cfasync="false">
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: '#2563eb', /* blue-600 */
+              accent: '#f59e0b',  /* amber-500 */
+              card: '#ffffff',
+              border: '#e5e7eb',
+              muted: '#6b7280',
+            },
+            boxShadow: {
+              card: '0 10px 30px rgba(31,41,55,0.08)'
+            },
+            borderRadius: {
+              xl: '16px'
+            }
+          }
+        }
+      }
+    </script>
+    <script data-cfasync="false" src="https://cdn.tailwindcss.com"></script>
+    <script data-cfasync="false" src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script data-cfasync="false" src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script data-cfasync="false" src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/core.min.js"></script>
+    <script data-cfasync="false" src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/python.min.js"></script>
+    <script data-cfasync="false" src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/languages/javascript.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github-dark.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+:root {
+    --bg: #ffffff;
+    --card: #ffffff;
+    --text: #111111;
+    --muted: #6b7280;
+    --border: #e5e7eb;
+    --code-bg: #f3f4f6;
+}
+html.dark {
+    --bg: #0b0b0b;
+    --card: #111111;
+    --text: #e5e7eb;
+    --muted: #9ca3af;
+    --border: #374151;
+    --code-bg: #0f172a;
+}
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 20px 20px 80px 20px; /* Extra padding at bottom for fixed tabs */
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: var(--card);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(31,41,55,0.08);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .header {
+            background: var(--card);
+            color: var(--text);
+            padding: 24px 30px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .input-section {
+            margin-bottom: 30px;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text);
+}
+
+        input[type="text"], textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s, background-color 0.2s, color 0.2s;
+        }
+
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: var(--muted);
+        }
+
+        input[type="text"]::placeholder, textarea::placeholder {
+            color: var(--muted);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: inherit;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        button {
+            padding: 14px 28px;
+            font-size: 16px;
+            font-weight: 700;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            flex: 1;
+        }
+
+        .btn-primary {
+            background: #e5e7eb;
+            color: #111827;
+            box-shadow: none;
+            border: 1px solid var(--border);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #111827;
+            box-shadow: none;
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #e0e0e0;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .progress-section {
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .progress-section.active {
+            display: block;
+        }
+
+        .progress-step {
+            padding: 10px;
+            margin: 5px 0;
+            background: var(--card);
+            border-radius: 6px;
+            border-left: 4px solid var(--border);
+            font-size: 14px;
+        }
+
+        .progress-step .step-number {
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .progress-step .step-action {
+            text-transform: uppercase;
+            font-weight: 600;
+            color: var(--muted);
+        }
+
+        .result-section {
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 20px;
+            display: none;
+            border: 1px solid var(--border);
+        }
+
+        .result-section.active {
+            display: block;
+        }
+
+        .result-section h3 {
+            color: var(--text);
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .report-content {
+            background: var(--card);
+            padding: 24px;
+            border-radius: 12px;
+            line-height: 1.75;
+            color: var(--text);
+            border: 1px solid var(--border);
+            white-space: normal;
+        }
+
+        .metadata {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .metadata-item {
+            background: var(--card);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .metadata-item .label {
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .metadata-item .value {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .sources {
+            margin-top: 20px;
+        }
+
+        .sources h4 {
+            color: var(--text);
+            margin-bottom: 10px;
+        }
+
+        .source-link {
+            display: block;
+            padding: 10px 14px;
+            background: transparent;
+            border-radius: 8px;
+            margin: 6px 0;
+            color: inherit;
+            text-decoration: underline;
+            font-size: 14px;
+            border: 1px solid var(--border);
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        .source-link:hover {
+            background: #f9fafb;
+            transform: translateY(-1px);
+        }
+
+        .status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status.pending { background: #ffeaa7; color: #d63031; }
+        .status.running { background: #74b9ff; color: #0984e3; }
+        .status.completed { background: #55efc4; color: #00b894; }
+        .status.failed { background: #ff7675; color: #d63031; }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .tab-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            gap: 0;
+            background: white;
+            box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+            z-index: 1000;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 16px 24px;
+            background: white;
+            border: none;
+            border-top: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: #666;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-top-color: #667eea;
+            background: #f8f9fa;
+        }
+
+        .tab:hover:not(.active) {
+            background: #f8f9fa;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .chart-container {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+            max-height: 400px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 15px 0;
+        }
+
+        .stat-card {
+            background: var(--card);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--muted);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #111827;
+        }
+        .stat-value.positive { color: inherit; }
+        .stat-value.negative { color: inherit; }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            background: var(--card);
+        }
+
+        .accordion {
+            background: var(--card);
+            border-radius: 8px;
+            margin: 15px 0;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: none;
+        }
+
+        .accordion-header {
+            background: var(--card);
+            color: var(--text);
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            user-select: none;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .accordion-header:hover { background: #f9fafb; }
+
+        .accordion-icon {
+            transition: transform 0.3s;
+        }
+
+        .accordion-header.active .accordion-icon {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background: var(--bg);
+        }
+
+        .accordion-content.active {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .accordion-body {
+            padding: 20px;
+        }
+
+        .log-entry {
+            position: relative;
+            padding: 10px 12px 10px 28px;
+            margin: 8px 0;
+            background: var(--card);
+            color: var(--text);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+        .log-entry::before {
+            content: '';
+            position: absolute;
+            left: 12px;
+            top: 16px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #9ca3af;
+        }
+        .log-entry .time { color: var(--muted); margin-right: 8px; }
+
+        .markdown-content { line-height: 1.8; }
+
+        .markdown-content h1 {
+            font-size: 2em;
+            margin: 1em 0 0.5em 0;
+            color: #111827;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.3em;
+        }
+
+        .markdown-content h2 {
+            font-size: 1.5em;
+            margin: 1em 0 0.5em 0;
+            color: #111827;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.25em;
+        }
+
+        .markdown-content h3 {
+            font-size: 1.2em;
+            margin: 0.8em 0 0.4em 0;
+            color: #555;
+        }
+
+        .markdown-content ul, .markdown-content ol {
+            margin: 0.5em 0 0.5em 2em;
+        }
+
+        .markdown-content li {
+            margin: 0.3em 0;
+        }
+
+        .markdown-content p {
+            margin: 0.3em 0;
+        }
+
+        .markdown-content strong {
+            color: inherit;
+            font-weight: 700;
+        }
+
+        .download-btn {
+            background: #00b894;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            margin: 15px 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .download-btn:hover {
+            background: #00a383;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 184, 148, 0.3);
+        }
+
+        .markdown-content code { background: var(--code-bg); padding: 2px 6px; border-radius: 4px; }
+
+        .markdown-content pre { background: #111111; padding: 14px; border-radius: 8px; overflow-x: auto; margin: 1em 0; }
+
+        .markdown-content pre code { background: transparent; padding: 0; color: #e6edf3; }
+
+        .markdown-content blockquote { padding: 0.5em 1em; margin: 0.8em 0; color: #4b5563; border-left: 4px solid #d1d5db; background: #f9fafb; border-radius: 6px; }
+
+        .markdown-content table { border-collapse: collapse; width: 100%; margin: 1em 0; font-size: 0.95em; }
+
+        .markdown-content th, .markdown-content td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; }
+
+        .markdown-content th { background: #f8f9fa; font-weight: 600; }
+
+        /* Copy button and live dot */
+        .code-block { position: relative; }
+        .copy-btn { position: absolute; top: 8px; right: 8px; background: transparent; color: #111; border: 1px solid var(--border); border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer; }
+        .copy-btn:hover { background: #f3f4f6; }
+        .live-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #9ca3af; margin-left: 8px; }
+        .live-dot.on { background: #22c55e; box-shadow: 0 0 0 4px rgba(34,197,94,0.15); }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            min-height: 60vh;
+        }
+
+        .chat-messages-container {
+            background: var(--bg);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .chat-input-container {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.1);
+            position: sticky;
+            bottom: 70px;
+            z-index: 100;
+        }
+
+        .chat-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .chat-option {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .chat-option-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .chat-option input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #111111;
+        }
+
+        .chat-option label {
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text);
+            margin: 0;
+        }
+
+        .chat-option-desc {
+            font-size: 11px;
+            color: var(--muted);
+            margin-left: 26px;
+            line-height: 1.3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header relative">
+            <h1>🤖 Deep Research</h1>
+            <p>Multi-step iterative AI research powered by local Ollama</p>
+            <button id="theme-toggle" class="absolute top-4 right-4 text-sm font-semibold px-3 py-1.5 rounded-md border border-slate-200 text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-neutral-800 focus:outline-none" onclick="toggleTheme()">Toggle Theme</button>
+        </div>
+
+        <!-- Top Tabs Navigation -->
+        <div class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-slate-200 dark:bg-neutral-900/90 dark:border-slate-700">
+          <div class="max-w-[1100px] mx-auto">
+            <div id="tablist" role="tablist" aria-label="Sections" class="relative flex gap-2 px-4 pt-3">
+              <button id="tab-research" role="tab" aria-selected="true" aria-controls="research-tab" onclick="switchTab('research')"
+                class="group relative px-4 py-2 rounded-lg text-sm font-semibold text-slate-900 dark:text-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400">
+                <span>Deep Research</span>
+              </button>
+              <button id="tab-financial" role="tab" aria-selected="false" aria-controls="financial-tab" onclick="switchTab('financial')"
+                class="group relative px-4 py-2 rounded-lg text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400">
+                <span>Financial</span>
+              </button>
+              <button id="tab-chat" role="tab" aria-selected="false" aria-controls="chat-tab" onclick="switchTab('chat')"
+                class="group relative px-4 py-2 rounded-lg text-sm font-semibold text-gray-600 dark:text-gray-300 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-400">
+                <span>Chat</span>
+              </button>
+              <!-- Animated indicator -->
+              <span id="tab-indicator" class="absolute bottom-0 h-0.5 bg-slate-900 dark:bg-slate-100 transition-all duration-300 ease-out"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="content">
+
+            <!-- Research Tab -->
+            <div id="research-tab" class="tab-content active">
+                <div class="input-section">
+                    <div class="input-group">
+                        <label for="query">Research Query</label>
+                        <textarea id="query" placeholder="What would you like to research? e.g., 'Latest developments in quantum computing'"></textarea>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn-primary" onclick="toggleResearch()" id="research-btn">
+                            ▶ Run
+                        </button>
+                        <button class="btn-secondary" onclick="clearResults()">
+                            Clear
+                        </button>
+                    </div>
+                </div>
+
+                <div id="result" class="result-section">
+                    <h3>Research Report</h3>
+
+                    <!-- Processing Progress (Accordion) -->
+                    <div class="accordion">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>🔍 Research Progress (Click to expand)</span>
+                            <span id="research-live-dot" class="live-dot"></span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body" id="progress-steps"></div>
+                        </div>
+                    </div>
+
+                    <!-- Download Button -->
+                    <div style="margin: 15px 0;">
+                        <button class="download-btn" onclick="downloadResearchMarkdown()" id="research-download-btn" style="display: none;">
+                            📥 Download Report (Markdown)
+                        </button>
+                    </div>
+
+                    <!-- Report Content -->
+                    <div class="report-content markdown-content" id="report-content"></div>
+
+                    <div class="metadata" id="metadata"></div>
+
+                    <div class="sources" id="sources-container"></div>
+                </div>
+            </div>
+
+            <!-- Financial Research Tab -->
+            <div id="financial-tab" class="tab-content">
+                <div class="input-section">
+                    <div class="input-group">
+                        <label for="stock-symbol">Stock Symbol</label>
+                        <input type="text" id="stock-symbol" placeholder="e.g., AAPL, UNH, TSLA" value="AAPL">
+                    </div>
+
+                    <div class="input-group">
+                        <label for="financial-query">Research Query</label>
+                        <textarea id="financial-query" placeholder="e.g., Analyze sentiment and price trends for the past 6 months">Analyze sentiment and price trends for the past 6 months</textarea>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn-primary" onclick="toggleFinancialResearch()" id="financial-btn">
+                            ▶ Run
+                        </button>
+                        <button class="btn-secondary" onclick="clearFinancialResults()">
+                            Clear
+                        </button>
+                    </div>
+                </div>
+
+                <div id="financial-result" class="result-section">
+                    <h3>Financial Research Report</h3>
+
+                    <!-- Processing Log (Accordion) -->
+                    <div class="accordion">
+                        <div class="accordion-header" onclick="toggleAccordion(this)">
+                            <span>🔍 Processing Log (Click to expand)</span>
+                            <span id="financial-live-dot" class="live-dot"></span>
+                            <span class="accordion-icon">▼</span>
+                        </div>
+                        <div class="accordion-content">
+                            <div class="accordion-body" id="processing-log"></div>
+                        </div>
+                    </div>
+
+                    <!-- Stats Overview -->
+                    <div class="stats-grid" id="financial-stats"></div>
+
+                    <!-- Charts -->
+                    <div id="chart-skeletons" class="grid grid-cols-1 gap-4 mb-4 hidden">
+                        <div class="h-40 rounded-lg bg-gray-200 animate-pulse"></div>
+                        <div class="h-40 rounded-lg bg-gray-200 animate-pulse"></div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="sentiment-timeline-chart"></canvas>
+                    </div>
+
+                    <div class="chart-container">
+                        <canvas id="sentiment-distribution-chart"></canvas>
+                    </div>
+
+                    <!-- Report Text (with markdown rendering) -->
+                    <div style="margin: 15px 0;">
+                        <button class="download-btn" onclick="downloadMarkdown()" id="download-btn" style="display: none;">
+                            📥 Download Report (Markdown)
+                        </button>
+                    </div>
+                    <div id="report-skeleton" class="h-40 rounded-lg bg-gray-200 animate-pulse mb-4 hidden"></div>
+                    <div class="report-content markdown-content" id="financial-report-content"></div>
+                </div>
+            </div>
+
+            <!-- Chat Tab -->
+            <div id="chat-tab" class="tab-content">
+                <div class="chat-container">
+                    <!-- Messages at top -->
+                    <div class="chat-messages-container" id="chat-messages">
+                        <div style="text-align: center; color: #999; padding: 40px;">
+                            💬 Start a conversation...
+                        </div>
+                    </div>
+
+                    <!-- Input at bottom -->
+                    <div class="chat-input-container">
+                        <!-- Chat Options -->
+                        <div class="chat-options">
+                            <div class="chat-option">
+                                <div class="chat-option-header">
+                                    <input type="checkbox" id="enable-thinking" onchange="updateChatOptions()">
+                                    <label for="enable-thinking">🧠 Show Thinking</label>
+                                </div>
+                                <div class="chat-option-desc">Display reasoning step-by-step</div>
+                            </div>
+
+                            <div class="chat-option">
+                                <div class="chat-option-header">
+                                    <input type="checkbox" id="enable-web-search" onchange="updateChatOptions()">
+                                    <label for="enable-web-search">🔍 Web Search</label>
+                                </div>
+                                <div class="chat-option-desc">Search internet for current info</div>
+                            </div>
+
+                            <div class="chat-option">
+                                <div class="chat-option-header">
+                                    <input type="checkbox" id="enable-deep-research" onchange="updateChatOptions()">
+                                    <label for="enable-deep-research">🔬 Deep Research</label>
+                                </div>
+                                <div class="chat-option-desc">Multi-step research with sources</div>
+                            </div>
+                        </div>
+
+                        <div style="font-size: 12px; color: #666; margin-bottom: 10px; padding: 8px; background: #e8f4f8; border-radius: 6px;">
+                            💡 <strong>Always available:</strong> Math, dates, time, text operations, logic<br>
+                            <span id="mode-info"></span>
+                        </div>
+
+                        <div style="display: flex; gap: 10px;">
+                            <textarea id="chat-input" placeholder="Ask anything... (Enter to send, Shift+Enter for new line)" style="flex: 1; min-height: 60px;" onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();toggleChat();}"></textarea>
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                <button class="btn-primary" onclick="toggleChat()" id="chat-btn" style="height: 60px;">
+                                    ▶ Run
+                                </button>
+                                <button class="btn-secondary" onclick="clearChat()" style="height: 60px; font-size: 12px;">
+                                    Clear
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-root" class="fixed top-4 right-4 z-[1000] space-y-2"></div>
+
+    <script>
+        // Auto-detect API base URL based on how the page is accessed
+        const API_BASE = (function() {
+            // If accessed via HTTPS (Cloudflare tunnel), use same origin
+            if (window.location.protocol === 'https:') {
+                return window.location.origin;
+            }
+            // If accessed locally, use explicit local server
+            return 'http://10.0.0.138:8000';
+        })();
+
+        console.log('API_BASE:', API_BASE);
+
+        let currentTaskId = null;
+        let chatHistory = [];
+        let sentimentChart = null;
+        let distributionChart = null;
+        let currentReportMarkdown = '';
+        let currentResearchMarkdown = '';
+        let chatOptions = {
+            thinking: false,
+            webSearch: false,
+            deepResearch: false
+        };
+
+        // EventSource tracking for stop functionality
+        let researchEventSource = null;
+        let financialEventSource = null;
+        let isResearchRunning = false;
+        let isFinancialRunning = false;
+
+        // AbortController for chat
+        let chatAbortController = null;
+        let isChatRunning = false;
+
+        // Configure marked.js with highlight.js
+        marked.setOptions({
+            highlight: function(code, lang) {
+                if (lang && hljs.getLanguage(lang)) {
+                    return hljs.highlight(code, { language: lang }).value;
+                }
+                return hljs.highlightAuto(code).value;
+            },
+            breaks: true,
+            gfm: true
+        });
+
+        // Chart.js defaults polish
+        try {
+            if (window.Chart) {
+                Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif";
+                Chart.defaults.color = '#334155';
+                Chart.defaults.plugins.legend.position = 'bottom';
+                Chart.defaults.elements.line.tension = 0.3;
+                Chart.defaults.elements.point.radius = 2.5;
+                Chart.defaults.scale.grid.color = 'rgba(0,0,0,0.06)';
+                Chart.defaults.maintainAspectRatio = false;
+            }
+        } catch (e) {}
+
+        function slugify(text) {
+            return text.toLowerCase().trim().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-');
+        }
+
+        function enhanceMarkdown(container) {
+            if (!container) return;
+            // Open links in new tab
+            container.querySelectorAll('a[href]').forEach(a => { a.target = '_blank'; a.rel = 'noopener'; });
+
+            // Heading anchors
+            container.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach(h => {
+                if (!h.id) h.id = slugify(h.textContent || '');
+                if (!h.querySelector('a.anchor-link')) {
+                    const a = document.createElement('a');
+                    a.className = 'anchor-link';
+                    a.href = `#${h.id}`;
+                    a.style.marginLeft = '8px';
+                    a.style.opacity = '0.6';
+                    a.textContent = '#';
+                    h.appendChild(a);
+                }
+            });
+
+            // Code copy buttons
+            container.querySelectorAll('pre').forEach(pre => {
+                if (pre.parentElement && !pre.parentElement.classList.contains('code-block')) {
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'code-block';
+                    pre.parentElement.insertBefore(wrapper, pre);
+                    wrapper.appendChild(pre);
+
+                    const btn = document.createElement('button');
+                    btn.className = 'copy-btn';
+                    btn.textContent = 'Copy';
+                    btn.addEventListener('click', async () => {
+                        try {
+                            await navigator.clipboard.writeText(pre.innerText);
+                            const old = btn.textContent; btn.textContent = 'Copied!';
+                            setTimeout(() => btn.textContent = old, 1500);
+                        } catch (e) {}
+                    });
+                    wrapper.appendChild(btn);
+
+                    // Language badge
+                    try {
+                        const code = pre.querySelector('code');
+                        let lang = '';
+                        if (code && code.className) {
+                            const m = code.className.match(/language-([a-z0-9]+)/i);
+                            if (m) lang = m[1].toUpperCase();
+                        }
+                        if (lang) {
+                            const badge = document.createElement('span');
+                            badge.textContent = lang;
+                            badge.className = 'absolute top-2 left-2 text-[10px] tracking-wide font-semibold px-2 py-0.5 rounded bg-slate-700/80 text-white';
+                            wrapper.appendChild(badge);
+                        }
+                    } catch (e) {}
+                }
+            });
+        }
+
+        function nowTime() { return new Date().toLocaleTimeString([], {hour12: false}); }
+
+        // Toast notifications
+        function showToast(message) {
+            const root = document.getElementById('toast-root');
+            if (!root) return alert(message);
+            const el = document.createElement('div');
+            el.className = 'flex items-start gap-3 rounded-lg px-4 py-3 bg-white/95 dark:bg-neutral-900/95 text-slate-900 dark:text-slate-100 border border-slate-200 dark:border-slate-700 shadow-sm';
+            el.innerHTML = `<div class="mt-0.5">${message}</div>`;
+            root.appendChild(el);
+            setTimeout(() => {
+                el.classList.add('opacity-0');
+                el.classList.add('transition-opacity');
+                setTimeout(() => el.remove(), 200);
+            }, 3500);
+        }
+
+        // Tabs handling with ARIA + animated indicator
+        function setActiveTab(tab) {
+            const map = { research: 'tab-research', financial: 'tab-financial', chat: 'tab-chat' };
+            const btnId = map[tab];
+            if (!btnId) return;
+            // Panels
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            const panel = document.getElementById(`${tab}-tab`);
+            if (panel) panel.classList.add('active');
+            // Buttons
+            ['tab-research','tab-financial','tab-chat'].forEach(id => {
+                const b = document.getElementById(id);
+                if (!b) return;
+                const selected = (id === btnId);
+                b.setAttribute('aria-selected', selected ? 'true':'false');
+                b.classList.toggle('text-slate-900', selected);
+                b.classList.toggle('text-gray-600', !selected);
+                b.classList.toggle('dark:text-slate-100', selected);
+                b.classList.toggle('dark:text-gray-300', !selected);
+            });
+            moveTabIndicator();
+            try { localStorage.setItem('activeTab', tab); } catch (e) {}
+        }
+
+        function switchTab(tab) { setActiveTab(tab); }
+
+        function moveTabIndicator() {
+            const tablist = document.getElementById('tablist');
+            const indicator = document.getElementById('tab-indicator');
+            if (!tablist || !indicator) return;
+            const active = tablist.querySelector('[role="tab"][aria-selected="true"]');
+            if (!active) return;
+            const r = active.getBoundingClientRect();
+            const pr = tablist.getBoundingClientRect();
+            const left = r.left - pr.left + tablist.scrollLeft;
+            indicator.style.left = `${left}px`;
+            indicator.style.width = `${r.width}px`;
+        }
+
+        window.addEventListener('resize', () => moveTabIndicator());
+        document.addEventListener('DOMContentLoaded', () => {
+            try {
+                const saved = localStorage.getItem('activeTab') || 'research';
+                setActiveTab(saved);
+            } catch (e) {
+                setActiveTab('research');
+            }
+            // Keyboard navigation
+            const tablist = document.getElementById('tablist');
+            if (tablist) {
+                tablist.addEventListener('keydown', (e) => {
+                    const tabs = Array.from(tablist.querySelectorAll('[role="tab"]'));
+                    const idx = tabs.findIndex(t => t.getAttribute('aria-selected')==='true');
+                    if (e.key === 'ArrowRight') {
+                        const next = tabs[(idx+1) % tabs.length]; next.focus(); next.click(); e.preventDefault();
+                    } else if (e.key === 'ArrowLeft') {
+                        const prev = tabs[(idx-1+tabs.length)%tabs.length]; prev.focus(); prev.click(); e.preventDefault();
+                    }
+                });
+            }
+            // Theme preference: default dark, toggle to light on click
+            try {
+                const pref = localStorage.getItem('theme');
+                if (!pref || pref === 'dark') {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+            } catch (e) {
+                document.documentElement.classList.add('dark');
+            }
+            moveTabIndicator();
+        });
+
+        function toggleTheme() {
+            const el = document.documentElement;
+            if (el.classList.contains('dark')) {
+                el.classList.remove('dark');
+                try { localStorage.setItem('theme', 'light'); } catch (e) {}
+            } else {
+                el.classList.add('dark');
+                try { localStorage.setItem('theme', 'dark'); } catch (e) {}
+            }
+        }
+
+        function toggleResearch() {
+            if (isResearchRunning) {
+                stopResearch();
+            } else {
+                startResearch();
+            }
+        }
+
+        function stopResearch() {
+            if (researchEventSource) {
+                researchEventSource.close();
+                researchEventSource = null;
+            }
+
+            const btn = document.getElementById('research-btn');
+            const dot = document.getElementById('research-live-dot');
+
+            btn.innerHTML = '▶ Run';
+            isResearchRunning = false;
+
+            if (dot) dot.classList.remove('on');
+
+            showToast('Research stopped', 'info');
+        }
+
+        async function startResearch() {
+            const query = document.getElementById('query').value.trim();
+
+            if (!query) {
+                showToast('Please enter a research query', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('research-btn');
+            btn.innerHTML = '⬛ Stop';
+            isResearchRunning = true;
+
+            document.getElementById('result').classList.add('active');
+            document.getElementById('progress-steps').innerHTML = '';
+
+            // Auto-open research progress accordion and show live indicator
+            try {
+                const header = document.querySelector('#research-tab .accordion .accordion-header');
+                const content = header && header.nextElementSibling;
+                if (header && content && !content.classList.contains('active')) {
+                    header.classList.add('active');
+                    content.classList.add('active');
+                }
+                const dot = document.getElementById('research-live-dot');
+                if (dot) dot.classList.add('on');
+            } catch (e) {}
+
+            try {
+                // Start research
+                const response = await fetch(`${API_BASE}/api/research`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+
+                const data = await response.json();
+                currentTaskId = data.task_id;
+
+                // Stream progress
+                researchEventSource = new EventSource(`${API_BASE}/api/research/${currentTaskId}/stream`);
+
+                researchEventSource.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+
+                    if (data.type === 'step') {
+                        addProgressStep(data);
+                    } else if (data.type === 'complete') {
+                        showResult(data.result);
+                        researchEventSource.close();
+                        researchEventSource = null;
+                        btn.innerHTML = '▶ Run';
+                        isResearchRunning = false;
+                        const dot = document.getElementById('research-live-dot');
+                        if (dot) dot.classList.remove('on');
+                    } else if (data.type === 'error') {
+                        showToast('Error: ' + data.error, 'error');
+                        researchEventSource.close();
+                        researchEventSource = null;
+                        btn.innerHTML = '▶ Run';
+                        isResearchRunning = false;
+                        const dot = document.getElementById('research-live-dot');
+                        if (dot) dot.classList.remove('on');
+                    }
+                };
+
+                researchEventSource.onerror = function() {
+                    if (researchEventSource) {
+                        researchEventSource.close();
+                        researchEventSource = null;
+                    }
+                    btn.innerHTML = '▶ Run';
+                    isResearchRunning = false;
+                    const dot = document.getElementById('research-live-dot');
+                    if (dot) dot.classList.remove('on');
+                };
+
+            } catch (error) {
+                showToast('Error: ' + error.message, 'error');
+                btn.innerHTML = '▶ Run';
+                isResearchRunning = false;
+                const dot = document.getElementById('research-live-dot');
+                if (dot) dot.classList.remove('on');
+            }
+        }
+
+        function addProgressStep(step) {
+            const container = document.getElementById('progress-steps');
+            const stepEl = document.createElement('div');
+            stepEl.className = 'log-entry step';
+            const time = document.createElement('span');
+            time.className = 'time';
+            time.textContent = nowTime();
+            const text = document.createElement('span');
+            text.className = 'text';
+            text.textContent = `[Step ${step.step_number}] ${step.action}: ${step.description}`;
+            stepEl.appendChild(time);
+            stepEl.appendChild(text);
+            container.appendChild(stepEl);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function showResult(result) {
+            document.getElementById('result').classList.add('active');
+
+            // Store and render markdown
+            currentResearchMarkdown = result.final_report;
+            const reportHtml = marked.parse(result.final_report);
+            const rc = document.getElementById('report-content');
+            rc.innerHTML = reportHtml;
+            enhanceMarkdown(rc);
+
+            // Show download button
+            document.getElementById('research-download-btn').style.display = 'inline-flex';
+
+            // Metadata
+            const metadata = document.getElementById('metadata');
+            metadata.innerHTML = `
+                <div class="metadata-item">
+                    <div class="label">Duration</div>
+                    <div class="value">${result.duration_seconds.toFixed(1)}s</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="label">Searches</div>
+                    <div class="value">${result.total_searches}</div>
+                </div>
+                <div class="metadata-item">
+                    <div class="label">URLs Scraped</div>
+                    <div class="value">${result.total_urls_scraped}</div>
+                </div>
+            `;
+
+            // Sources
+            const sourcesContainer = document.getElementById('sources-container');
+            if (result.sources && result.sources.length > 0) {
+                sourcesContainer.innerHTML = '<h4>Sources</h4>';
+                result.sources.forEach((source, i) => {
+                    const link = document.createElement('a');
+                    link.className = 'source-link';
+                    link.href = source;
+                    link.target = '_blank';
+                    link.textContent = `[${i + 1}] ${source}`;
+                    sourcesContainer.appendChild(link);
+                });
+            }
+        }
+
+        function downloadResearchMarkdown() {
+            if (!currentResearchMarkdown) {
+                showToast('No report available to download', 'warning');
+                return;
+            }
+
+            const query = document.getElementById('query').value.trim();
+            const date = new Date().toISOString().split('T')[0];
+            const filename = `Research_Report_${date}.md`;
+
+            const blob = new Blob([currentResearchMarkdown], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function clearResults() {
+            document.getElementById('query').value = '';
+            document.getElementById('result').classList.remove('active');
+            document.getElementById('progress-steps').innerHTML = '';
+            document.getElementById('report-content').innerHTML = '';
+            document.getElementById('research-download-btn').style.display = 'none';
+            currentResearchMarkdown = '';
+        }
+
+        function updateChatOptions() {
+            chatOptions.thinking = document.getElementById('enable-thinking').checked;
+            chatOptions.webSearch = document.getElementById('enable-web-search').checked;
+            chatOptions.deepResearch = document.getElementById('enable-deep-research').checked;
+
+            // If deep research is enabled, disable web search (they're mutually exclusive)
+            if (chatOptions.deepResearch) {
+                document.getElementById('enable-web-search').checked = false;
+                chatOptions.webSearch = false;
+            }
+
+            // Update mode info
+            const modeInfo = document.getElementById('mode-info');
+            if (chatOptions.thinking && chatOptions.webSearch) {
+                modeInfo.innerHTML = '<br>✨ <strong>Enhanced Mode:</strong> Web search → Content scraping → LLM analysis with thinking';
+                modeInfo.style.color = '#667eea';
+            } else if (chatOptions.deepResearch) {
+                modeInfo.innerHTML = '<br>🔬 <strong>Deep Research Mode:</strong> Multi-step iterative research';
+                modeInfo.style.color = '#764ba2';
+            } else if (chatOptions.webSearch) {
+                modeInfo.innerHTML = '<br>🔍 <strong>Web Search Mode:</strong> Quick internet search';
+                modeInfo.style.color = '#0984e3';
+            } else {
+                modeInfo.innerHTML = '';
+            }
+        }
+
+        function detectQueryType(message) {
+            const lowerMessage = message.toLowerCase();
+            const newsKeywords = ['news', 'latest', 'breaking', 'headlines', 'recent news', 'today news', 'current news'];
+            const hasNewsKeyword = newsKeywords.some(keyword => lowerMessage.includes(keyword));
+
+            return hasNewsKeyword ? 'news' : 'general';
+        }
+
+        function toggleChat() {
+            if (isChatRunning) {
+                stopChat();
+            } else {
+                sendChatMessage();
+            }
+        }
+
+        function stopChat() {
+            if (chatAbortController) {
+                chatAbortController.abort();
+                chatAbortController = null;
+            }
+
+            const btn = document.getElementById('chat-btn');
+            btn.innerHTML = '▶ Run';
+            isChatRunning = false;
+
+            showToast('Chat stopped', 'info');
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            // Create new abort controller
+            chatAbortController = new AbortController();
+
+            // Always provide utilities context
+            const currentDate = new Date().toISOString().split('T')[0];
+            const currentTime = new Date().toLocaleTimeString();
+            const dayOfWeek = new Date().toLocaleDateString('en-US', { weekday: 'long' });
+
+            let systemContext = `Current date: ${currentDate} (${dayOfWeek})
+Current time: ${currentTime}
+
+Available utilities (always enabled):
+- Math: calculations, algebra, statistics, conversions
+- Date/Time: current date, time calculations, date arithmetic, time zones
+- Text: string operations, formatting, analysis
+- Logic: reasoning, comparisons, decision trees
+
+`;
+
+            // Add thinking instruction if enabled
+            let thinkingPrompt = '';
+            if (chatOptions.thinking) {
+                thinkingPrompt = `\nIMPORTANT: Show your reasoning process step-by-step. Use this format:
+🧠 **Thinking:**
+1. [First, I need to understand...]
+2. [Then, I'll search/calculate/analyze...]
+3. [Finally, I'll conclude...]
+
+**Answer:**
+[Your final answer]\n\n`;
+                systemContext += thinkingPrompt;
+            }
+
+            // Build the final message
+            let enrichedMessage = `${systemContext}User query: ${message}`;
+
+            chatHistory.push({ role: 'user', content: message });
+            addChatMessage('user', message);
+            input.value = '';
+
+            const btn = document.getElementById('chat-btn');
+            btn.innerHTML = '⬛ Stop';
+            isChatRunning = true;
+
+            try {
+                let response, data;
+
+                if (chatOptions.deepResearch) {
+                    // Deep research mode
+                    response = await fetch(`${API_BASE}/api/chat`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            messages: [{ role: 'user', content: message }],
+                            enable_research: true
+                        }),
+                        signal: chatAbortController.signal
+                    });
+                    data = await response.json();
+
+                } else if (chatOptions.webSearch) {
+                    // Check if BOTH thinking and web search are enabled
+                    if (chatOptions.thinking) {
+                        // Enhanced mode: Web search + scraping + LLM analysis
+
+                        response = await fetch(`${API_BASE}/api/enhanced_search`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                query: message,
+                                show_thinking: true
+                            }),
+                            signal: chatAbortController.signal
+                        });
+                        const enhancedData = await response.json();
+
+                        data = { content: enhancedData.response };
+
+                    } else {
+                        // Standard web search (no scraping)
+                        const queryType = detectQueryType(message);
+
+                        if (queryType === 'news') {
+                            // Use SerpAPI News Search
+
+                            response = await fetch(`${API_BASE}/api/news_search`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    query: message.replace(/news|latest|breaking|headlines/gi, '').trim()
+                                }),
+                                signal: chatAbortController.signal
+                            });
+                            const newsData = await response.json();
+
+                            // Format news results
+                            let newsContent = `📰 **Latest News**\n\n`;
+                            newsContent += `**Top ${newsData.total} News Articles:**\n\n`;
+
+                            newsData.results.forEach((article, i) => {
+                                newsContent += `**${i + 1}. ${article.title}**\n`;
+                                newsContent += `   📍 Source: ${article.source}${article.date ? ` | ${article.date}` : ''}\n`;
+                                if (article.snippet) {
+                                    newsContent += `   📄 ${article.snippet}\n`;
+                                }
+                                newsContent += `   🔗 [Read more](${article.link})\n\n`;
+                            });
+
+                            data = { content: newsContent };
+
+                        } else {
+                            // Use SerpAPI AI Mode for general queries
+
+                            response = await fetch(`${API_BASE}/api/ai_search`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ query: message }),
+                                signal: chatAbortController.signal
+                            });
+                            const aiData = await response.json();
+
+                            // Format AI search results
+                            let aiContent = `🔍 **AI Search Results**\n\n`;
+
+                            if (aiData.ai_answer) {
+                                aiContent += `**AI Summary:**\n${aiData.ai_answer}\n\n`;
+                            }
+
+                            if (aiData.sources && aiData.sources.length > 0) {
+                                aiContent += `**Sources:**\n`;
+                                aiData.sources.forEach((source, i) => {
+                                    aiContent += `${i + 1}. [${source.title || 'Source'}](${source.link})\n`;
+                                });
+                                aiContent += '\n';
+                            }
+
+                            if (aiData.search_results && aiData.search_results.length > 0) {
+                                aiContent += `**Related Results:**\n`;
+                                aiData.search_results.forEach((result, i) => {
+                                    aiContent += `${i + 1}. **${result.title}**\n   ${result.snippet || ''}\n   🔗 [${result.link}](${result.link})\n\n`;
+                                });
+                            }
+
+                            data = { content: aiContent };
+                        }
+                    }
+
+                } else {
+                    // Regular chat with utilities (and optional thinking)
+                    response = await fetch(`${API_BASE}/api/chat`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            messages: [...chatHistory.slice(0, -1), { role: 'user', content: enrichedMessage }],
+                            enable_research: false
+                        }),
+                        signal: chatAbortController.signal
+                    });
+                    data = await response.json();
+                }
+
+                chatHistory.push({ role: 'assistant', content: data.content });
+                addChatMessage('assistant', data.content, data.metadata);
+
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    addChatMessage('assistant', `⚠️ Request cancelled`, null);
+                } else {
+                    addChatMessage('assistant', `❌ Error: ${error.message}`, null);
+                }
+            } finally {
+                btn.innerHTML = '▶ Run';
+                isChatRunning = false;
+                chatAbortController = null;
+            }
+        }
+
+        function addChatMessage(role, content, metadata) {
+            const container = document.getElementById('chat-messages');
+
+            // Remove placeholder if exists
+            if (container.children.length === 1 && container.children[0].textContent.includes('Start a conversation')) {
+                container.innerHTML = '';
+            }
+
+            const msgEl = document.createElement('div');
+            msgEl.style.cssText = `
+                margin: 10px 0;
+                padding: 15px;
+                background: ${role === 'user' ? '#667eea' : 'white'};
+                color: ${role === 'user' ? 'white' : '#333'};
+                border-radius: 12px;
+                ${role === 'user' ? 'margin-left: 20%;' : 'margin-right: 20%;'}
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            `;
+
+            let metaInfo = '';
+            if (metadata && metadata.type === 'research') {
+                metaInfo = `<div style="font-size: 12px; opacity: 0.7; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.1);">
+                    🔍 Deep Research: ${metadata.total_searches} searches, ${metadata.total_urls_scraped} sources scraped
+                </div>`;
+            }
+
+            // Render markdown for assistant messages
+            let messageContent;
+            if (role === 'assistant') {
+                // Hide "Thinking" section behind an accordion if present
+                let thinkingHtml = '';
+                let answerHtml = '';
+                try {
+                    const hasThinking = /(🧠|\*\*Thinking\:\*\*)/i.test(content);
+                    if (hasThinking) {
+                        // Attempt to split into thinking and answer sections
+                        const answerIdx = content.search(/\*\*Answer\:\*\*|\bAnswer\:/i);
+                        if (answerIdx > -1) {
+                            const thinkingPart = content.slice(0, answerIdx);
+                            const answerPart = content.slice(answerIdx);
+                            thinkingHtml = marked.parse(thinkingPart);
+                            answerHtml = marked.parse(answerPart);
+                        } else {
+                            // Only thinking present
+                            thinkingHtml = marked.parse(content);
+                        }
+                    } else {
+                        answerHtml = marked.parse(content);
+                    }
+                } catch (e) {
+                    answerHtml = marked.parse(content);
+                }
+
+                if (thinkingHtml) {
+                    messageContent = `
+                        <details style="margin-bottom:10px;">
+                            <summary style="cursor:pointer; font-weight:600; color:#2563eb;">🧠 Reasoning (click to toggle)</summary>
+                            <div class="markdown-content" style="margin-top:8px;">${thinkingHtml}</div>
+                        </details>
+                        <div class="markdown-content">${answerHtml}</div>`;
+                } else {
+                    messageContent = `<div class="markdown-content">${answerHtml || marked.parse(content)}</div>`;
+                }
+            } else {
+                messageContent = `<div style="white-space: pre-wrap;">${content}</div>`;
+            }
+
+            msgEl.innerHTML = `
+                <div style="font-weight: 600; margin-bottom: 8px; opacity: 0.8;">${role === 'user' ? '👤 You' : '🤖 Assistant'}</div>
+                ${messageContent}
+                ${metaInfo}
+            `;
+
+            container.appendChild(msgEl);
+
+            // Scroll to the message smoothly
+            setTimeout(() => {
+                msgEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+
+        function clearChat() {
+            chatHistory = [];
+            document.getElementById('chat-messages').innerHTML = `
+                <div style="text-align: center; color: #999; padding: 40px;">
+                    💬 Start a conversation...
+                </div>
+            `;
+            document.getElementById('chat-input').value = '';
+        }
+
+        function toggleFinancialResearch() {
+            if (isFinancialRunning) {
+                stopFinancialResearch();
+            } else {
+                startFinancialResearch();
+            }
+        }
+
+        function stopFinancialResearch() {
+            if (financialEventSource) {
+                financialEventSource.close();
+                financialEventSource = null;
+            }
+
+            const btn = document.getElementById('financial-btn');
+            const dot = document.getElementById('financial-live-dot');
+
+            btn.innerHTML = '▶ Run';
+            isFinancialRunning = false;
+
+            if (dot) dot.classList.remove('on');
+
+            showToast('Financial research stopped', 'info');
+        }
+
+        async function startFinancialResearch() {
+            const symbol = document.getElementById('stock-symbol').value.trim().toUpperCase();
+            const query = document.getElementById('financial-query').value.trim();
+
+            if (!symbol || !query) {
+                showToast('Please enter both stock symbol and research query', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('financial-btn');
+            btn.innerHTML = '⬛ Stop';
+            isFinancialRunning = true;
+
+            document.getElementById('financial-result').classList.add('active');
+            document.getElementById('processing-log').innerHTML = '';
+            // show skeletons
+            const cs = document.getElementById('chart-skeletons');
+            const rs = document.getElementById('report-skeleton');
+            if (cs) cs.classList.remove('hidden');
+            if (rs) rs.classList.remove('hidden');
+
+            // Auto-open processing log accordion and show live indicator
+            try {
+                const header = document.querySelector('#financial-result .accordion .accordion-header');
+                const content = header && header.nextElementSibling;
+                if (header && content && !content.classList.contains('active')) {
+                    header.classList.add('active');
+                    content.classList.add('active');
+                }
+                const dot = document.getElementById('financial-live-dot');
+                if (dot) dot.classList.add('on');
+            } catch (e) {}
+
+            // Add initial log entries
+            addLogEntry(`📅 Reference Date: ${new Date().toISOString().split('T')[0]}`, 'info');
+            addLogEntry(`📊 Researching: ${symbol}`, 'info');
+            addLogEntry(`❓ Query: ${query}`, 'info');
+            addLogEntry(`🤖 Model: qwen3:32b`, 'info');
+            addLogEntry('', 'info');
+            addLogEntry('💰 Step 1: Getting current stock price...', 'step');
+
+            try {
+                // Kick off async task
+                const startResp = await fetch(`${API_BASE}/api/financial_research/start`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ symbol, query })
+                });
+
+                if (!startResp.ok) {
+                    const errText = await startResp.text();
+                    addLogEntry(`❌ Error starting task: ${errText}`, 'error');
+                    throw new Error('Failed to start financial research');
+                }
+
+                const startData = await startResp.json();
+                const taskId = startData.task_id;
+
+                // Stream progress via SSE
+                financialEventSource = new EventSource(`${API_BASE}/api/financial_research/${taskId}/stream`);
+
+                financialEventSource.onmessage = (ev) => {
+                    try {
+                        const data = JSON.parse(ev.data);
+                        if (data.type === 'status') {
+                            addLogEntry(`ℹ️ Status: ${data.status}`, 'info');
+                        } else if (data.type === 'step') {
+                            const desc = data.description || '';
+                            const label = data.action ? `${data.action}` : 'step';
+                            addLogEntry(`${desc}`, 'step');
+                        } else if (data.type === 'heartbeat') {
+                            // Optional: keep-alive signal; no UI needed
+                        } else if (data.type === 'complete') {
+                            financialEventSource.close();
+                            financialEventSource = null;
+                            addLogEntry('✅ Research complete!', 'success');
+                            if (data.result) {
+                                showFinancialResults(data.result);
+                            }
+                            const dot = document.getElementById('financial-live-dot');
+                            if (dot) dot.classList.remove('on');
+                            btn.innerHTML = '▶ Run';
+                            isFinancialRunning = false;
+                        } else if (data.type === 'error') {
+                            financialEventSource.close();
+                            financialEventSource = null;
+                            addLogEntry(`❌ Error: ${data.error || 'Unknown error'}`, 'error');
+                            showToast('Error: ' + (data.error || 'Unknown error'), 'error');
+                            const dot = document.getElementById('financial-live-dot');
+                            if (dot) dot.classList.remove('on');
+                            btn.innerHTML = '▶ Run';
+                            isFinancialRunning = false;
+                        }
+                    } catch (e) {
+                        // Ignore parse errors
+                    }
+                };
+
+                financialEventSource.onerror = () => {
+                    if (financialEventSource) {
+                        financialEventSource.close();
+                        financialEventSource = null;
+                    }
+                    addLogEntry('❌ Streaming connection lost', 'error');
+                    const dot = document.getElementById('financial-live-dot');
+                    if (dot) dot.classList.remove('on');
+                    btn.innerHTML = '▶ Run';
+                    isFinancialRunning = false;
+                };
+
+            } catch (error) {
+                addLogEntry(`❌ Error: ${error.message}`, 'error');
+                showToast('Error: ' + error.message, 'error');
+                btn.innerHTML = '▶ Run';
+                isFinancialRunning = false;
+            }
+        }
+
+        function addLogEntry(text, type = 'info') {
+            const log = document.getElementById('processing-log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            entry.textContent = text;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function toggleAccordion(header) {
+            header.classList.toggle('active');
+            const content = header.nextElementSibling;
+            content.classList.toggle('active');
+        }
+
+        function showFinancialResults(data) {
+            document.getElementById('financial-result').classList.add('active');
+
+            const sd = data.structured_data;
+
+            // Display stats
+            const statsHtml = `
+                <div class="stat-card">
+                    <div class="stat-label">Current Price</div>
+                    <div class="stat-value">${sd.price_data.current_price ? '$' + sd.price_data.current_price.toFixed(2) : 'N/A'}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Sentiment</div>
+                    <div class="stat-value ${sd.sentiment_summary.overall_sentiment === 'positive' ? 'positive' : sd.sentiment_summary.overall_sentiment === 'negative' ? 'negative' : ''}">${sd.sentiment_summary.overall_sentiment}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Avg Score</div>
+                    <div class="stat-value ${sd.sentiment_summary.avg_score > 0 ? 'positive' : sd.sentiment_summary.avg_score < 0 ? 'negative' : ''}">${sd.sentiment_summary.avg_score.toFixed(2)}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Trend</div>
+                    <div class="stat-value">${sd.sentiment_summary.trend}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Articles</div>
+                    <div class="stat-value">${sd.sentiment_summary.total_articles}</div>
+                </div>
+            `;
+            document.getElementById('financial-stats').innerHTML = statsHtml;
+
+            // Render sentiment timeline chart
+            renderSentimentTimeline(sd.sentiment_timeseries);
+
+            // Render sentiment distribution chart
+            renderSentimentDistribution(sd.sentiment_summary.distribution);
+
+            // Store raw markdown for download
+            currentReportMarkdown = data.report;
+
+            // Display report (render as markdown)
+            const reportHtml = marked.parse(data.report);
+            const frc = document.getElementById('financial-report-content');
+            frc.innerHTML = reportHtml;
+            enhanceMarkdown(frc);
+
+            // Show download button
+            document.getElementById('download-btn').style.display = 'inline-flex';
+            // Hide skeletons
+            const cs2 = document.getElementById('chart-skeletons');
+            const rs2 = document.getElementById('report-skeleton');
+            if (cs2) cs2.classList.add('hidden');
+            if (rs2) rs2.classList.add('hidden');
+        }
+
+        function downloadMarkdown() {
+            if (!currentReportMarkdown) {
+                showToast('No report available to download', 'warning');
+                return;
+            }
+
+            const symbol = document.getElementById('stock-symbol').value.trim().toUpperCase();
+            const date = new Date().toISOString().split('T')[0];
+            const filename = `${symbol}_Financial_Report_${date}.md`;
+
+            // Create blob and download
+            const blob = new Blob([currentReportMarkdown], { type: 'text/markdown' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function renderSentimentTimeline(timeseries) {
+            const ctx = document.getElementById('sentiment-timeline-chart');
+
+            // Destroy existing chart
+            if (sentimentChart) {
+                sentimentChart.destroy();
+            }
+
+            // Prepare data
+            const labels = timeseries.map((item, index) => item.date || `Article ${index + 1}`);
+            const scores = timeseries.map(item => item.sentiment_score);
+            const colors = scores.map(score =>
+                score > 0.3 ? 'rgba(0, 184, 148, 0.6)' :
+                score < -0.3 ? 'rgba(214, 48, 49, 0.6)' :
+                'rgba(108, 117, 125, 0.6)'
+            );
+
+            sentimentChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Sentiment Score',
+                        data: scores,
+                        backgroundColor: colors,
+                        borderColor: colors.map(c => c.replace('0.6', '1')),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Sentiment Timeline',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const item = timeseries[context.dataIndex];
+                                    return [
+                                        `Score: ${item.sentiment_score.toFixed(2)}`,
+                                        `Sentiment: ${item.sentiment}`,
+                                        `Title: ${item.title.substring(0, 50)}...`
+                                    ];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            min: -1,
+                            max: 1,
+                            title: {
+                                display: true,
+                                text: 'Sentiment Score'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderSentimentDistribution(distribution) {
+            const ctx = document.getElementById('sentiment-distribution-chart');
+
+            // Destroy existing chart
+            if (distributionChart) {
+                distributionChart.destroy();
+            }
+
+            distributionChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Positive', 'Negative', 'Neutral'],
+                    datasets: [{
+                        data: [distribution.positive, distribution.negative, distribution.neutral],
+                        backgroundColor: [
+                            'rgba(0, 184, 148, 0.8)',
+                            'rgba(214, 48, 49, 0.8)',
+                            'rgba(108, 117, 125, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(0, 184, 148, 1)',
+                            'rgba(214, 48, 49, 1)',
+                            'rgba(108, 117, 125, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Sentiment Distribution',
+                            font: { size: 16, weight: 'bold' }
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function clearFinancialResults() {
+            document.getElementById('financial-result').classList.remove('active');
+            document.getElementById('financial-stats').innerHTML = '';
+            document.getElementById('financial-report-content').innerHTML = '';
+            document.getElementById('processing-log').innerHTML = '';
+            document.getElementById('download-btn').style.display = 'none';
+            currentReportMarkdown = '';
+
+            if (sentimentChart) {
+                sentimentChart.destroy();
+                sentimentChart = null;
+            }
+
+            if (distributionChart) {
+                distributionChart.destroy();
+                distributionChart = null;
+            }
+        }
+    </script>
+</body>
+</html>

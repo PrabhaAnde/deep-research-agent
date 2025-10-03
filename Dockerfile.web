@@ -1,0 +1,18 @@
+# Use Python 3.11 slim image
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Copy the HTML file
+COPY example_client.html index.html
+
+# Expose web port
+EXPOSE 8180
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8180')"
+
+# Run simple HTTP server
+CMD ["python", "-m", "http.server", "8180"]

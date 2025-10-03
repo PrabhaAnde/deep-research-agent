@@ -1,0 +1,33 @@
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+*.log.*
+
+# Docker files (don't copy into containers)
+Dockerfile*
+docker-compose*.yaml
+.dockerignore
+
+# Documentation
+*.md
+!README.md
+
+# Git
+.git/
+.gitignore
